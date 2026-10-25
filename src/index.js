@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { exec } from 'node:child_process';
+import QRCode from 'qrcode';
 import { abrirDB } from './db.js';
 import { sembrarCatalogo, asegurarProgramacion } from './seed.js';
 import { crearAdminInicial } from './auth.js';
@@ -56,15 +58,30 @@ function urlsRed() {
 }
 
 const { app } = crearApp({ db, secreto, secretoSesion, ttlMs: TTL_MS, impresora, urlsRed });
-app.listen(PORT, HOST, () => {
-  console.log('🐍 Las Cobras Viajes — servidor iniciado (Computadora 1)\n');
-  console.log('   ADMINISTRADOR (en esta computadora):');
-  console.log(`     http://localhost:${PORT}/admin/\n`);
-  console.log('   CLIENTES (desde otras computadoras de la red local):');
-  for (const r of urlsRed()) {
-    console.log(`     ${`${r.url}/`.padEnd(28)} (${r.interfaz})${r.virtual ? '  ← adaptador virtual, probablemente NO es tu Wi-Fi' : ''}`);
+app.listen(PORT, HOST, async () => {
+  const red = urlsRed();
+  const principal = red.find((r) => !r.virtual) ?? red[0];
+  console.log('🐍 Las Cobras Viajes — servidor iniciado\n');
+  console.log('   💻 LAPTOP (administrador): abre en esta computadora');
+  console.log(`        http://localhost:${PORT}/admin/      usuario: ${usuarioAdmin}\n`);
+  if (principal) {
+    console.log('   📱 CELULAR (cliente): conéctalo al MISMO Wi-Fi y escanea este QR o escribe la dirección');
+    console.log(`        ${principal.url}/\n`);
+    console.log((await QRCode.toString(`${principal.url}/`, { type: 'terminal', small: true })).replace(/^/gm, '        '));
+    const otras = red.filter((r) => r !== principal);
+    if (otras.length) {
+      console.log('   Otras direcciones de esta computadora (úsalas solo si la anterior no funciona):');
+      for (const r of otras) console.log(`        ${r.url}/  (${r.interfaz})${r.virtual ? '  ← adaptador virtual, NO es tu Wi-Fi' : ''}`);
+      console.log('');
+    }
+    console.log(`   ¿El celular no abre? Prueba ${principal.url}/api/ping — si no carga, es el Firewall o la red Wi-Fi.\n`);
+  } else {
+    console.log('   📱 No se detectó red Wi-Fi: conecta esta computadora a una red para que el celular pueda entrar.\n');
   }
-  if (!urlsRed().length) console.log('     (sin red local detectada)');
-  console.log('\n   ¿El celular no abre la página? Debe estar en el mismo Wi-Fi y el Firewall debe permitir el puerto');
-  console.log(`   ${PORT}. Desde el celular, prueba primero: <dirección>/api/ping\n`);
+  // Con ABRIR_NAVEGADOR=1 (lo usa iniciar-windows.bat) se abre el panel del administrador automáticamente.
+  if (process.env.ABRIR_NAVEGADOR === '1') {
+    const url = `http://localhost:${PORT}/admin/`;
+    const comando = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
+    exec(comando, () => {});
+  }
 });

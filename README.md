@@ -45,7 +45,17 @@ Todas las computadoras cliente comparten **la misma base de datos** a través de
 
 ## Instalación paso a paso
 
-### 1. En la Computadora 1 (servidor / administrador)
+### ⚡ Windows: inicio con doble clic (recomendado)
+
+1. Instala [Node.js 22 o superior](https://nodejs.org).
+2. Descarga o clona este repositorio y haz **doble clic en `iniciar-windows.bat`**.
+3. La primera vez instala lo necesario y pide permiso de administrador para abrir el puerto 3000 en el Firewall: pulsa **Sí**.
+4. Se abre solo el **panel del administrador** en tu laptop (`admin` / `admin123`).
+5. En la ventana negra aparece un **QR**, y también en el Panel del administrador: escanéalo con el **celular conectado al mismo Wi-Fi** y se abre la página del cliente.
+
+> No cierres la ventana negra: es el servidor. Si la cierras, el celular deja de funcionar.
+
+### 1. En la Computadora 1 (servidor / administrador), manualmente
 
 Requisitos: **Node.js 22.13 o superior** ([descargar](https://nodejs.org)). No hace falta instalar ninguna base de datos: se usa el SQLite integrado en Node (`node:sqlite`).
 
@@ -65,7 +75,7 @@ La consola muestra las direcciones:
      http://localhost:3000/admin/
 
    CLIENTES (desde otras computadoras de la red local):
-     http://192.168.1.15:3000/
+     http://192.168.1.15:3000/      ← ejemplo: en tu equipo saldrá TU propia IP
 ```
 
 Abre `http://localhost:3000/admin/` e inicia sesión con **usuario `admin` / contraseña `admin123`** (cámbiala con la variable `ADMIN_PASSWORD` antes del primer arranque). El panel también muestra la dirección que deben usar los clientes.
@@ -87,6 +97,7 @@ Abre `http://localhost:3000/admin/` en una ventana y `http://localhost:3000/` en
 
 Haz las comprobaciones en este orden:
 
+0. **Usa TU IP, no la de los ejemplos.** `192.168.1.15` es solo un ejemplo de esta guía. Si la abres y sale *"tardó demasiado en responder"* (`ERR_CONNECTION_TIMED_OUT`), esa IP no existe en tu red. Mira la que muestra la consola al iniciar, o ejecuta `ipconfig` y busca **"Dirección IPv4"** debajo de **"Adaptador de LAN inalámbrica Wi-Fi"**.
 1. **No uses `localhost` en el celular.** `localhost` siempre significa "este mismo aparato", así que en el celular busca un servidor dentro del propio celular. Usa la IP del servidor, por ejemplo `http://192.168.1.15:3000/`. Lo más fácil es **escanear el QR** que aparece en el Panel del administrador.
 2. **Mismo Wi-Fi.** El celular debe estar en la misma red que la computadora servidor, con los **datos móviles desactivados**. Las redes Wi-Fi de invitados o de universidades suelen aislar los dispositivos entre sí ("aislamiento de clientes"). En ese caso, usa el **punto de acceso (hotspot) del celular** y conecta la computadora a él.
 3. **Elige la IP correcta.** Si la consola muestra varias direcciones, usa la del adaptador **Wi-Fi** o **Ethernet**, normalmente `192.168.x.x`. Las marcadas como "adaptador virtual" (VirtualBox, WSL, Hyper-V) no sirven.
