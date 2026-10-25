@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Venta de boletos · Las Cobras Viajes</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header>
+    <h1>🐍 Las Cobras Viajes</h1>
+    <nav><a href="./" class="activo">Venta</a><a href="embarque.html">Embarque</a></nav>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Buscar salidas</h2>
+      <form id="filtros" class="filtros">
+        <label>Origen <select name="origen"><option value="">Todos</option></select></label>
+        <label>Destino <select name="destino"><option value="">Todos</option></select></label>
+        <label>Fecha <input type="date" name="fecha"></label>
+        <button type="submit">Buscar</button>
+      </form>
+      <div id="viajes" class="viajes"></div>
+    </section>
+
+    <section id="venta" class="venta oculto">
+      <div class="panel">
+        <div class="cabecera-viaje">
+          <div>
+            <h2 id="titulo-viaje"></h2>
+            <div id="meta-viaje" class="vacio"></div>
+          </div>
+          <span id="envivo" class="envivo">Conectando…</span>
+        </div>
+        <div id="pisos" class="pisos"></div>
+        <div class="leyenda">
+          <span class="l-libre">Libre</span><span class="l-mio">Tu selección</span>
+          <span class="l-otro">Reservado por otro cliente</span><span class="l-vendido">Vendido</span>
+        </div>
+      </div>
+      <aside class="panel resumen">
+        <h2>Tu compra</h2>
+        <div id="temporizador" class="temporizador oculto"></div>
+        <form id="form-compra" class="resumen">
+          <div id="pasajeros"><p class="vacio">Elige tus asientos en el mapa (máx. 6).</p></div>
+          <div class="total"><span>Total</span><span id="total">S/ 0.00</span></div>
+          <button id="btn-comprar" type="submit" disabled>Pagar y emitir boletos</button>
+        </form>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="dialogo-boletos">
+    <h2>✅ ¡Compra realizada!</h2>
+    <p class="vacio">Imprime cada boleto en la térmica de 58 mm o guárdalo. El QR se valida en el embarque.</p>
+    <div id="lista-boletos" class="lista-boletos"></div>
+    <button id="cerrar-dialogo" class="secundario">Cerrar</button>
+  </dialog>
+
+  <script type="module" src="venta.js"></script>
+</body>
+</html>

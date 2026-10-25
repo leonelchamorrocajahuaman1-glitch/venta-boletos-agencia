@@ -1,0 +1,20 @@
+{
+  "name": "las-cobras-boletos",
+  "version": "1.0.0",
+  "description": "Sistema de venta de boletos de bus con control de concurrencia, mapa de asientos en tiempo real, embarque por QR e impresión térmica de 58 mm",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning src/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\"",
+    "simular": "node scripts/simular-concurrencia.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "qrcode": "^1.5.4"
+  }
+}

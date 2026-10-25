@@ -1,0 +1,139 @@
+:root {
+  --fondo: #f4f6f8;
+  --panel: #ffffff;
+  --texto: #1d2733;
+  --suave: #5f6b7a;
+  --borde: #dde3ea;
+  --marca: #0f7b5f;
+  --marca-oscura: #0a5a45;
+  --libre: #e6f4ee;
+  --libre-borde: #7cc4a6;
+  --mio: #2563eb;
+  --otro: #f59e0b;
+  --vendido: #9aa5b1;
+  --error: #c62828;
+  --ok: #138a4a;
+  --radio: 10px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 20px; background: var(--marca); color: #fff;
+}
+header h1 { margin: 0; font-size: 1.2rem; }
+header nav a { color: #fff; text-decoration: none; margin-left: 16px; opacity: .85; }
+header nav a.activo { opacity: 1; font-weight: 600; border-bottom: 2px solid #fff; }
+main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
+.panel { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; }
+h2 { font-size: 1.05rem; margin: 0 0 12px; }
+.filtros { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+label { display: grid; gap: 4px; font-size: .85rem; color: var(--suave); }
+input, select, button { font: inherit; }
+input, select {
+  padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; background: #fff; color: var(--texto); min-width: 0;
+}
+button {
+  padding: 9px 16px; border-radius: 8px; border: 1px solid var(--marca); background: var(--marca); color: #fff; cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--marca-oscura); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.secundario { background: #fff; color: var(--marca); }
+button.peligro { background: #fff; color: var(--error); border-color: var(--error); }
+.oculto { display: none !important; }
+
+.viajes { display: grid; gap: 10px; margin-top: 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.viaje {
+  text-align: left; background: #fff; color: var(--texto); border: 1px solid var(--borde); padding: 12px 14px; display: grid; gap: 4px;
+}
+.viaje:hover:not(:disabled) { background: #f7fbf9; border-color: var(--marca); }
+.viaje .hora { font-size: 1.3rem; font-weight: 700; }
+.viaje .meta { color: var(--suave); font-size: .85rem; }
+.viaje .precio { color: var(--marca); font-weight: 600; }
+
+.venta { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .venta { grid-template-columns: 1fr; } }
+.cabecera-viaje { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.envivo { font-size: .8rem; color: var(--suave); display: inline-flex; align-items: center; gap: 6px; }
+.envivo::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--vendido); }
+.envivo.conectado::before { background: #22c55e; box-shadow: 0 0 0 3px #22c55e33; }
+
+.pisos { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.piso { border: 2px solid var(--borde); border-radius: 28px 28px 12px 12px; padding: 14px; background: #fafbfc; }
+.piso h3 { margin: 0 0 10px; font-size: .9rem; text-align: center; color: var(--suave); }
+.frente { text-align: center; font-size: .75rem; color: var(--suave); border-bottom: 1px dashed var(--borde); padding-bottom: 8px; margin-bottom: 10px; }
+.grilla { display: grid; gap: 6px; grid-auto-rows: 42px; }
+.asiento {
+  width: 42px; padding: 0; border-radius: 8px 8px 4px 4px; font-weight: 600; font-size: .85rem;
+  background: var(--libre); color: var(--marca-oscura); border: 1px solid var(--libre-borde); position: relative;
+  transition: transform .15s, background .2s;
+}
+.asiento.libre:hover:not(:disabled) { background: #cdebdc; transform: translateY(-1px); }
+.asiento.vip { border-width: 2px; }
+.asiento.mio { background: var(--mio); color: #fff; border-color: var(--mio); }
+.asiento.otro { background: var(--otro); color: #fff; border-color: var(--otro); cursor: not-allowed; }
+.asiento.vendido { background: var(--vendido); color: #fff; border-color: var(--vendido); cursor: not-allowed; }
+.asiento.destello { animation: destello .6s; }
+@keyframes destello { 0% { transform: scale(1.25); box-shadow: 0 0 0 6px #f59e0b55; } 100% { transform: scale(1); } }
+
+.leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--suave); margin: 14px 0 0; justify-content: center; }
+.leyenda span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.leyenda .l-libre::before { background: var(--libre); border: 1px solid var(--libre-borde); }
+.leyenda .l-mio::before { background: var(--mio); }
+.leyenda .l-otro::before { background: var(--otro); }
+.leyenda .l-vendido::before { background: var(--vendido); }
+
+.resumen { display: grid; gap: 12px; align-content: start; }
+.pasajero { border: 1px solid var(--borde); border-radius: 8px; padding: 10px; display: grid; gap: 8px; }
+.pasajero .titulo { display: flex; justify-content: space-between; font-weight: 600; }
+.pasajero .titulo small { color: var(--suave); font-weight: 400; }
+.total { display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 700; }
+.temporizador { background: #eff6ff; color: var(--mio); padding: 8px 10px; border-radius: 8px; font-size: .9rem; }
+.temporizador.urgente { background: #fef2f2; color: var(--error); }
+.vacio { color: var(--suave); font-size: .9rem; }
+
+.aviso {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50; max-width: calc(100% - 32px);
+  background: var(--texto); color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 6px 24px #0003;
+}
+.aviso.error { background: var(--error); }
+
+dialog { border: none; border-radius: var(--radio); padding: 20px; width: min(520px, calc(100% - 32px)); }
+dialog::backdrop { background: #0006; }
+.lista-boletos { display: grid; gap: 8px; margin: 12px 0; }
+.lista-boletos a { display: flex; justify-content: space-between; padding: 10px; border: 1px solid var(--borde); border-radius: 8px; color: var(--texto); text-decoration: none; }
+.lista-boletos a:hover { border-color: var(--marca); }
+
+/* Embarque */
+.embarque { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .embarque { grid-template-columns: 1fr; } }
+#lector { width: 100%; border-radius: 8px; overflow: hidden; background: #111; min-height: 0; }
+.resultado { border-radius: var(--radio); padding: 18px; text-align: center; color: #fff; background: var(--vendido); }
+.resultado.ok { background: var(--ok); }
+.resultado.error { background: var(--error); }
+.resultado strong { display: block; font-size: 1.4rem; }
+.resultado .grande { font-size: 2.4rem; font-weight: 800; }
+.contadores { display: flex; gap: 12px; }
+.contador { flex: 1; text-align: center; padding: 10px; border-radius: 8px; background: var(--fondo); }
+.contador b { display: block; font-size: 1.6rem; }
+.barra { height: 8px; background: var(--fondo); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.barra div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.tabla-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+.estado { padding: 2px 8px; border-radius: 99px; font-size: .75rem; font-weight: 600; }
+.estado.EMITIDO { background: #eff6ff; color: var(--mio); }
+.estado.EMBARCADO { background: #e7f6ee; color: var(--ok); }
+.fila-nueva { animation: fondo 1.5s; }
+@keyframes fondo { from { background: #fff7d6; } to { background: transparent; } }
+.acciones { display: flex; gap: 6px; }
+.acciones button, .acciones a { padding: 4px 10px; font-size: .8rem; }
+.acciones a { border: 1px solid var(--marca); border-radius: 8px; color: var(--marca); text-decoration: none; }
+.form-linea { display: flex; gap: 8px; flex-wrap: wrap; }
+.form-linea input { flex: 1; min-width: 120px; }

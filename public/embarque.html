@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Embarque · Las Cobras Viajes</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🐍 Las Cobras Viajes · Embarque</h1>
+    <nav><a href="./">Venta</a><a href="embarque.html" class="activo">Embarque</a></nav>
+  </header>
+  <main>
+    <section class="panel filtros">
+      <label style="flex:1">Salida a embarcar
+        <select id="viaje"></select>
+      </label>
+      <span id="envivo" class="envivo">Sin conexión</span>
+    </section>
+
+    <section class="embarque">
+      <div class="resumen">
+        <div class="panel resumen">
+          <h2>Lectura de QR</h2>
+          <div id="lector"></div>
+          <div class="form-linea">
+            <button id="btn-camara" type="button">📷 Activar cámara</button>
+          </div>
+          <form id="form-lector" class="form-linea">
+            <input id="entrada-lector" placeholder="Lector USB: escanea aquí" autocomplete="off" aria-label="Contenido del QR">
+            <button class="secundario">Validar</button>
+          </form>
+          <details>
+            <summary>Ingreso manual (sin QR)</summary>
+            <form id="form-manual" class="form-linea" style="margin-top:8px">
+              <input name="codigo" placeholder="Código del boleto" required>
+              <input name="documento" placeholder="DNI del pasajero" required>
+              <button class="secundario">Validar</button>
+            </form>
+          </details>
+        </div>
+        <div id="resultado" class="resultado"><strong>Esperando lectura…</strong></div>
+      </div>
+
+      <div class="panel">
+        <div class="contadores">
+          <div class="contador"><b id="c-embarcados">0</b>Embarcados</div>
+          <div class="contador"><b id="c-pendientes">0</b>Pendientes</div>
+          <div class="contador"><b id="c-vendidos">0</b>Vendidos</div>
+        </div>
+        <div class="barra"><div id="progreso"></div></div>
+        <h2 style="margin-top:16px">Manifiesto de pasajeros</h2>
+        <div class="tabla-scroll">
+          <table>
+            <thead><tr><th>Asiento</th><th>Pasajero</th><th>Documento</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="manifiesto"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="embarque.js"></script>
+</body>
+</html>
