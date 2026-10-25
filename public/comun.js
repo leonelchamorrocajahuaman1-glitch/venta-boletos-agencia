@@ -16,6 +16,9 @@ export async function api(metodo, ruta, cuerpo) {
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   const datos = await res.json().catch(() => ({}));
+  if (res.status === 401 && location.pathname.startsWith('/admin/') && !location.pathname.endsWith('login.html')) {
+    location.href = `/admin/login.html?volver=${encodeURIComponent(location.pathname + location.search + location.hash)}`;
+  }
   if (!res.ok) {
     const err = new Error(datos.mensaje || `Error ${res.status}`);
     Object.assign(err, { status: res.status, datos });

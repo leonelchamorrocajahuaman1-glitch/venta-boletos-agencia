@@ -4,13 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Embarque · Las Cobras Viajes</title>
-  <link rel="stylesheet" href="estilos.css">
+  <link rel="stylesheet" href="../estilos.css">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>🐍 Las Cobras Viajes · Embarque</h1>
-    <nav><a href="./">Venta</a><a href="embarque.html" class="activo">Embarque</a></nav>
+  <header class="admin">
+    <h1>🐍 Las Cobras Viajes <span class="insignia">Administrador</span></h1>
+    <nav>
+      <a href="./#panel">Panel</a><a href="./#salidas">Salidas</a><a href="./#ventas">Ventas</a>
+      <a href="./#reportes">Reportes</a><a href="embarque.html" class="activo">Embarque</a>
+    </nav>
   </header>
   <main>
     <section class="panel filtros">

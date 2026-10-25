@@ -93,6 +93,13 @@ function conectarTiempoReal(id) {
     if (es.readyState === EventSource.OPEN) indicador.textContent = `En vivo · ${total} ${total === 1 ? 'persona' : 'personas'} viendo`;
   });
   es.addEventListener('asiento', (e) => actualizarAsiento(JSON.parse(e.data), true));
+  es.addEventListener('cancelado', (e) => {
+    es.close();
+    aviso(JSON.parse(e.data).mensaje, 'error');
+    $('#venta').classList.add('oculto');
+    estado.viaje = null;
+    buscar();
+  });
 }
 
 function actualizarAsiento(a, desdeServidor = false) {
@@ -253,5 +260,15 @@ function mostrarBoletos(boletos) {
 $('#filtros').addEventListener('submit', buscar);
 $('#form-compra').addEventListener('submit', comprarBoletos);
 $('#cerrar-dialogo').addEventListener('click', () => $('#dialogo-boletos').close());
+$('#abrir-mi-boleto').addEventListener('click', (e) => {
+  e.preventDefault();
+  $('#dialogo-mi-boleto').showModal();
+});
+$('#cerrar-mi-boleto').addEventListener('click', () => $('#dialogo-mi-boleto').close());
+$('#form-mi-boleto').addEventListener('submit', (e) => {
+  const codigo = e.target.codigo.value.trim().toUpperCase();
+  window.open(`ticket.html?codigo=${encodeURIComponent(codigo)}`, '_blank', 'noopener');
+  e.target.reset();
+});
 await cargarCiudades();
 await buscar();

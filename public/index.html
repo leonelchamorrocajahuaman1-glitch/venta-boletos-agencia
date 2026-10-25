@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>🐍 Las Cobras Viajes</h1>
-    <nav><a href="./" class="activo">Venta</a><a href="embarque.html">Embarque</a></nav>
+    <nav><a href="./" class="activo">Comprar pasajes</a><a href="#" id="abrir-mi-boleto">Mi boleto</a></nav>
   </header>
   <main>
     <section class="panel">
@@ -55,6 +55,14 @@
     <p class="vacio">Imprime cada boleto en la térmica de 58 mm o guárdalo. El QR se valida en el embarque.</p>
     <div id="lista-boletos" class="lista-boletos"></div>
     <button id="cerrar-dialogo" class="secundario">Cerrar</button>
+  </dialog>
+
+  <dialog id="dialogo-mi-boleto">
+    <h2>Consultar mi boleto</h2>
+    <form id="form-mi-boleto" method="dialog" class="resumen">
+      <label>Código del boleto <input name="codigo" required minlength="10" maxlength="10" placeholder="Ej. UGM9FAMF9L" autocomplete="off"></label>
+      <div class="form-linea"><button>Ver e imprimir</button><button type="button" class="secundario" id="cerrar-mi-boleto">Cerrar</button></div>
+    </form>
   </dialog>
 
   <script type="module" src="venta.js"></script>

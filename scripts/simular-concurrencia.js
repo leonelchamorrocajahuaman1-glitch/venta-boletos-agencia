@@ -8,10 +8,11 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
 const N = Number(process.argv[2] ?? 100);
 const DOBLE_CLIC = 10;
 
+let cookie = '';
 const api = async (metodo, ruta, cuerpo) => {
   const res = await fetch(BASE + ruta, {
     method: metodo,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   return { status: res.status, datos: await res.json() };
@@ -46,7 +47,16 @@ console.log('\n3) Un perdedor intenta comprar sin tener la reserva…');
 const intruso = await api('POST', `/api/viajes/${viaje.id}/compras`, { clienteId: clientes[(indice + 1) % N], pasajeros });
 console.log(`   ✖ ${intruso.status} ${intruso.datos.error}: ${intruso.datos.mensaje}`);
 
+// Limpieza: el administrador anula el boleto de prueba.
 const { codigo } = compras.find((r) => r.status === 201).datos.boletos[0];
-await api('POST', `/api/boletos/${codigo}/anular`);
-console.log(`\nBoleto de prueba ${codigo} anulado; el asiento ${asiento.numero} vuelve a estar libre.`);
+const login = await fetch(`${BASE}/api/admin/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ usuario: process.env.ADMIN_USUARIO ?? 'admin', password: process.env.ADMIN_PASSWORD ?? 'admin123' }),
+});
+cookie = login.headers.get('set-cookie')?.split(';')[0] ?? '';
+const anulado = await api('POST', `/api/boletos/${codigo}/anular`);
+console.log(anulado.status === 200
+  ? `\nBoleto de prueba ${codigo} anulado; el asiento ${asiento.numero} vuelve a estar libre.`
+  : `\nNo se pudo anular el boleto de prueba ${codigo} (${anulado.datos.mensaje}); anúlalo desde el panel.`);
 console.log('Resultado: cero dobles ventas. ✅');

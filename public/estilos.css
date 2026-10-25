@@ -137,3 +137,50 @@ th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borde); 
 .acciones a { border: 1px solid var(--marca); border-radius: 8px; color: var(--marca); text-decoration: none; }
 .form-linea { display: flex; gap: 8px; flex-wrap: wrap; }
 .form-linea input { flex: 1; min-width: 120px; }
+
+/* ───────────── Administrador ───────────── */
+header.admin { background: #1e293b; }
+.insignia {
+  font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+  background: #f59e0b; color: #1e293b; padding: 2px 8px; border-radius: 99px; vertical-align: middle; margin-left: 6px;
+}
+header .usuario { font-size: .85rem; opacity: .9; display: flex; gap: 10px; align-items: center; }
+header .usuario button { padding: 4px 10px; font-size: .8rem; background: transparent; border-color: #fff8; }
+.vista { display: none; }
+.vista.activa { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.dos-columnas > *, .embarque > * { min-width: 0; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px 16px; }
+.kpi .etiqueta { color: var(--suave); font-size: .8rem; }
+.kpi .valor { font-size: 1.7rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.kpi .nota { color: var(--suave); font-size: .75rem; }
+.kpi.vivo .valor { color: var(--mio); }
+.dos-columnas { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) { .dos-columnas { grid-template-columns: 1fr; } }
+.conexion { border-left: 4px solid var(--mio); }
+.conexion code { font-size: 1rem; background: #eff6ff; color: var(--mio); padding: 2px 8px; border-radius: 6px; user-select: all; }
+.ocupacion { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.ocupacion .pista { flex: 1; height: 8px; background: var(--fondo); border-radius: 4px; overflow: hidden; display: flex; gap: 2px; }
+.ocupacion .pista span { display: block; height: 100%; }
+.ocupacion .vend { background: var(--marca); border-radius: 0 4px 4px 0; }
+.ocupacion .res { background: var(--otro); border-radius: 0 4px 4px 0; }
+.ocupacion small { color: var(--suave); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+.actividad { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 360px; overflow-y: auto; }
+.actividad li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--borde); font-size: .85rem; }
+.actividad time { color: var(--suave); font-variant-numeric: tabular-nums; }
+.actividad .act-venta { font-weight: 600; }
+.actividad li.nuevo { animation: fondo 1.5s; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.estado.CANCELADO, .estado.ANULADO { background: #fef2f2; color: var(--error); }
+.estado.PARTIO { background: var(--fondo); color: var(--suave); }
+.estado.PROGRAMADO { background: #e7f6ee; color: var(--ok); }
+.barras { display: grid; gap: 6px; }
+.barra-fila { display: grid; grid-template-columns: 150px 1fr 110px; gap: 10px; align-items: center; font-size: .85rem; }
+.barra-fila .pista { height: 14px; position: relative; }
+.barra-fila .pista span { display: block; height: 100%; background: var(--marca); border-radius: 0 4px 4px 0; min-width: 2px; }
+.barra-fila:hover .pista span { background: var(--marca-oscura); }
+@media (max-width: 600px) { .barra-fila { grid-template-columns: 90px 1fr 80px; } }
+.login { max-width: 380px; margin: 8vh auto; }
+.login form { display: grid; gap: 12px; }
+.error-texto { color: var(--error); min-height: 1.2em; margin: 0; font-size: .9rem; }
+.leyenda .l-marca::before { background: var(--marca); }

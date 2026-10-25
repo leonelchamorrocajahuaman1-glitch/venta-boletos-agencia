@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel administrador · Las Cobras Viajes</title>
+  <link rel="stylesheet" href="../estilos.css">
+</head>
+<body>
+  <header class="admin">
+    <h1>🐍 Las Cobras Viajes <span class="insignia">Administrador</span></h1>
+    <nav id="pestanas">
+      <a href="#panel">Panel</a><a href="#salidas">Salidas</a><a href="#ventas">Ventas</a>
+      <a href="#reportes">Reportes</a><a href="embarque.html">Embarque</a>
+    </nav>
+    <div class="usuario"><span id="usuario"></span><button id="salir" type="button">Cerrar sesión</button></div>
+  </header>
+
+  <main>
+    <!-- ───────── Panel ───────── -->
+    <section id="vista-panel" class="vista">
+      <div class="panel conexion">
+        <h2>🖧 Conexión de las computadoras cliente</h2>
+        <div id="urls" class="vacio"></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="etiqueta">Boletos vendidos hoy</div><div class="valor" id="k-ventas">–</div></div>
+        <div class="kpi"><div class="etiqueta">Ingresos de hoy</div><div class="valor" id="k-ingresos">–</div></div>
+        <div class="kpi"><div class="etiqueta">Embarcados hoy</div><div class="valor" id="k-embarcados">–</div></div>
+        <div class="kpi vivo"><div class="etiqueta">Asientos en proceso de compra</div><div class="valor" id="k-comprando">–</div><div class="nota">reservas activas ahora mismo</div></div>
+        <div class="kpi"><div class="etiqueta">Salidas programadas hoy</div><div class="valor" id="k-salidas">–</div><div class="nota" id="k-anulados"></div></div>
+      </div>
+      <div class="dos-columnas">
+        <div class="panel">
+          <h2>Próximas salidas</h2>
+          <div class="tabla-scroll">
+            <table>
+              <thead><tr><th>Salida</th><th>Ruta</th><th>Bus</th><th>Ocupación</th><th class="num">Ingresos</th><th></th></tr></thead>
+              <tbody id="proximas"></tbody>
+            </table>
+          </div>
+          <div class="leyenda" style="justify-content:flex-start"><span class="l-marca">Vendidos</span><span class="l-otro">Reservados ahora</span></div>
+        </div>
+        <div class="panel">
+          <h2>Actividad en vivo <span id="envivo" class="envivo">Conectando…</span></h2>
+          <ul id="actividad" class="actividad"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Salidas ───────── -->
+    <section id="vista-salidas" class="vista">
+      <div class="panel">
+        <h2>Programar nueva salida</h2>
+        <form id="form-salida" class="filtros">
+          <label>Ruta <select name="rutaId" required></select></label>
+          <label>Bus <select name="busId" required></select></label>
+          <label>Fecha <input type="date" name="fecha" required></label>
+          <label>Hora <input type="time" name="hora" required value="10:00"></label>
+          <label>Precio base (S/) <input type="number" name="precio" required min="1" step="0.5" style="width:110px"></label>
+          <button>Crear salida</button>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="cabecera-viaje">
+          <h2>Salidas del día</h2>
+          <label>Fecha <input type="date" id="fecha-salidas"></label>
+        </div>
+        <div class="tabla-scroll">
+          <table>
+            <thead><tr><th>Hora</th><th>Ruta</th><th>Bus</th><th class="num">Precio</th><th>Ocupación</th><th class="num">Embarcados</th><th class="num">Ingresos</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="salidas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Ventas ───────── -->
+    <section id="vista-ventas" class="vista">
+      <div class="panel">
+        <form id="form-ventas" class="filtros">
+          <label>Fecha de venta <input type="date" name="fecha"></label>
+          <label style="flex:1">Buscar <input name="q" placeholder="Código, DNI o nombre del pasajero"></label>
+          <button>Buscar</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2 id="titulo-ventas">Boletos</h2>
+        <div class="tabla-scroll">
+          <table>
+            <thead><tr><th>Código</th><th>Vendido</th><th>Pasajero</th><th>Documento</th><th>Ruta</th><th>Salida</th><th class="num">Asiento</th><th class="num">Precio</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="ventas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Reportes ───────── -->
+    <section id="vista-reportes" class="vista">
+      <div class="panel">
+        <form id="form-reportes" class="filtros">
+          <label>Desde <input type="date" name="desde"></label>
+          <label>Hasta <input type="date" name="hasta"></label>
+          <button>Ver reporte</button>
+          <button id="csv" type="button" class="secundario">⬇ Exportar CSV</button>
+        </form>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="etiqueta">Boletos vendidos</div><div class="valor" id="r-boletos">–</div></div>
+        <div class="kpi"><div class="etiqueta">Ingresos</div><div class="valor" id="r-ingresos">–</div></div>
+        <div class="kpi"><div class="etiqueta">Ticket promedio</div><div class="valor" id="r-promedio">–</div></div>
+        <div class="kpi"><div class="etiqueta">Boletos anulados</div><div class="valor" id="r-anulados">–</div></div>
+      </div>
+      <div class="dos-columnas">
+        <div class="panel"><h2>Ingresos por día</h2><div id="r-dias" class="barras"></div></div>
+        <div class="panel"><h2>Ingresos por ruta</h2><div id="r-rutas" class="barras"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

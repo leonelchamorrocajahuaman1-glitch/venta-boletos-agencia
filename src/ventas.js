@@ -93,6 +93,7 @@ export function listarViajes(db, { origen, destino, fecha, embarque } = {}, ahor
   const desde = embarque ? ahora - 6 * 3_600_000 : ahora;
   return db.prepare(`${SQL_VIAJES}
     WHERE v.salida > :desde
+      AND v.estado = 'PROGRAMADO'
       AND (:origen IS NULL OR r.origen = :origen)
       AND (:destino IS NULL OR r.destino = :destino)
       AND (:inicio IS NULL OR (v.salida >= :inicio AND v.salida < :fin))

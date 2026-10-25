@@ -1,19 +1,53 @@
 # 🚌 Las Cobras Viajes — Sistema de venta de boletos
 
-Sistema de venta de pasajes de bus para una agencia de viajes con:
+Sistema de venta de pasajes de bus para una agencia de viajes, con **una computadora como servidor** (administrador + base de datos) y **computadoras cliente** que se conectan por la red local. Incluye:
 
 - **Concurrencia estricta**: es imposible vender dos veces el mismo asiento, aunque cientos de clientes lo intenten en el mismo milisegundo.
 - **Tiempo real**: el mapa interactivo del bus (2 pisos) se actualiza al instante en todos los navegadores mediante **Server-Sent Events (SSE)**.
 - **Embarque con QR**: cada boleto lleva un QR **firmado con HMAC-SHA256**; el módulo de embarque lo lee con la cámara o con un lector USB y rechaza QR falsos, boletos anulados, de otra salida o ya usados.
 - **Impresión térmica de 58 mm**: vista HTML optimizada para rollo de 58 mm y generación de comandos **ESC/POS** nativos (QR impreso por la propia impresora, corte de papel) con envío directo a impresoras de red por el puerto 9100.
 
-![Stack](https://img.shields.io/badge/Node.js-22.13+-339933) ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57) ![Tests](https://img.shields.io/badge/tests-12%20pasando-brightgreen)
+![Stack](https://img.shields.io/badge/Node.js-22.13+-339933) ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57) ![Tests](https://img.shields.io/badge/tests-17%20pasando-brightgreen)
 
 ---
 
-## Inicio rápido
+## Arquitectura: una computadora como servidor
 
-Requisitos: **Node.js 22.13 o superior** (usa el módulo integrado `node:sqlite`; no necesita instalar ninguna base de datos).
+```mermaid
+flowchart LR
+  subgraph PC1["🖥️ Computadora 1 — SERVIDOR (Administrador)"]
+    ADM["Página del administrador<br/>/admin/ (con login)"]
+    API["Servidor Node.js + Express<br/>Lógica de negocio · API REST · SSE"]
+    DB[("Base de datos SQLite<br/>data/boletos.db<br/>única para todo el sistema")]
+    ADM --> API
+    API --> DB
+  end
+  subgraph PC2["💻 Computadora 2 — CLIENTE"]
+    CLI["Página del cliente /<br/>(solo un navegador,<br/>sin base de datos)"]
+  end
+  CLI <-->|"Red local (LAN)<br/>HTTP + SSE en tiempo real"| API
+```
+
+| | Computadora 1 — Servidor | Computadora 2 — Cliente |
+|---|---|---|
+| **Quién la usa** | Personal de la agencia (administrador) | Pasajeros / punto de venta |
+| **Qué abre** | `http://localhost:3000/admin/` | `http://IP-DEL-SERVIDOR:3000/` |
+| **Interfaz** | Panel, salidas, ventas, reportes y embarque | Buscar salidas, elegir asiento en el mapa, comprar, imprimir boleto |
+| **Lógica de negocio** | ✅ Toda (Node.js) | — (la pide al servidor por la red) |
+| **Base de datos** | ✅ SQLite, un solo archivo | ❌ No tiene: se conecta al servidor |
+| **Instalación** | Node.js + `npm install` | Ninguna: solo un navegador |
+
+Todas las computadoras cliente comparten **la misma base de datos** a través del servidor, así que lo que vende una computadora se ve al instante en las demás y en el panel del administrador. Las reglas que evitan la doble venta están en el servidor y en la base de datos, por eso funcionan aunque haya muchos clientes a la vez.
+
+**¿Por qué los clientes no se conectan directamente a la base de datos (como con JDBC)?** Por seguridad y consistencia: si cada cliente tuviera usuario y contraseña de la BD, cualquiera podría modificar ventas a mano. Aquí el cliente solo puede hacer lo que la API permite (reservar, comprar), y el servidor valida cada operación dentro de una transacción.
+
+---
+
+## Instalación paso a paso
+
+### 1. En la Computadora 1 (servidor / administrador)
+
+Requisitos: **Node.js 22.13 o superior** ([descargar](https://nodejs.org)). No hace falta instalar ninguna base de datos: se usa el SQLite integrado en Node (`node:sqlite`).
 
 ```bash
 git clone https://github.com/leonelchamorrocajahuaman1-glitch/venta-boletos-agencia.git
@@ -22,15 +56,55 @@ npm install
 npm start
 ```
 
-| Módulo | URL |
+La consola muestra las direcciones:
+
+```
+🐍 Las Cobras Viajes — servidor iniciado (Computadora 1)
+
+   ADMINISTRADOR (en esta computadora):
+     http://localhost:3000/admin/
+
+   CLIENTES (desde otras computadoras de la red local):
+     http://192.168.1.15:3000/
+```
+
+Abre `http://localhost:3000/admin/` e inicia sesión con **usuario `admin` / contraseña `admin123`** (cámbiala con la variable `ADMIN_PASSWORD` antes del primer arranque). El panel también muestra la dirección que deben usar los clientes.
+
+> **Windows:** la primera vez, el Firewall pregunta si Node.js puede comunicarse en redes privadas → **Permitir**. Si no apareció, ejecuta en PowerShell como administrador:
+> `New-NetFirewallRule -DisplayName "Las Cobras Viajes" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private`
+>
+> Para saber la IP del servidor manualmente: `ipconfig` (Windows) o `ip addr` / `ifconfig` (Linux/Mac).
+
+### 2. En la Computadora 2 (cliente)
+
+Conéctala a la **misma red** (mismo Wi-Fi o switch) y abre en cualquier navegador la dirección que mostró el servidor, por ejemplo `http://192.168.1.15:3000/`. No se instala nada.
+
+### Probar con una sola computadora
+
+Abre `http://localhost:3000/admin/` en una ventana y `http://localhost:3000/` en otra (o en una ventana de incógnito). Compra un pasaje en la del cliente: en el panel del administrador aparece al instante en **Actividad en vivo** y se actualizan los indicadores.
+
+---
+
+## Página del cliente (`/`)
+
+- Búsqueda de salidas por origen, destino y fecha, con asientos libres y precio.
+- **Mapa interactivo del bus de 2 pisos** (12 VIP 180° + 40 semicama 160°) en tiempo real: libre, tu selección, reservado por otro cliente, vendido.
+- Reserva temporal de 5 minutos con cuenta regresiva; hasta 6 asientos por compra.
+- Datos de cada pasajero (nombre y DNI/pasaporte) y emisión de boletos con QR.
+- Impresión del boleto en térmica de 58 mm y consulta "Mi boleto" por código.
+- Si el administrador cancela una salida, los clientes que la están viendo reciben el aviso al instante.
+
+## Página del administrador (`/admin/`, requiere login)
+
+| Sección | Qué hace |
 |---|---|
-| Venta (mapa de asientos) | http://localhost:3000/ |
-| Embarque (lector QR + manifiesto) | http://localhost:3000/embarque.html |
-| Boleto imprimible 58 mm | http://localhost:3000/ticket.html?codigo=XXXX |
+| **Panel** | Boletos e ingresos del día, embarcados, asientos que se están comprando *ahora mismo*, ocupación de las próximas salidas y **actividad en vivo** de todos los clientes (ventas, reservas, embarques, anulaciones). Muestra la dirección LAN para los clientes. |
+| **Salidas** | Programar nuevas salidas (ruta, bus, fecha, hora, precio) con validación de que el bus no esté en otro viaje a esa hora; ver ocupación, embarcados e ingresos por salida; cancelar salidas sin boletos vendidos. |
+| **Ventas** | Buscar boletos por fecha, código, DNI o nombre; reimprimir y anular (el asiento vuelve a venderse). |
+| **Reportes** | Boletos, ingresos, ticket promedio y anulados en un rango de fechas; ingresos por día y por ruta; exportación a **CSV** (Excel). |
+| **Embarque** | Lectura de QR (cámara o lector USB), ingreso manual, manifiesto de pasajeros en vivo. |
 
-Al primer arranque se crean las rutas (Lima–Arequipa, Lima–Cusco, Lima–Trujillo, Arequipa–Puno), 4 buses de 2 pisos (12 asientos VIP 180° + 40 semicama 160°) y salidas programadas para los próximos 4 días (se renuevan solas cada hora).
-
-**Para ver el tiempo real**: abre la página de venta en dos navegadores (o una ventana normal y una de incógnito), elige la misma salida y reserva un asiento en una: se pinta de naranja en la otra al instante.
+Seguridad del administrador: contraseña guardada con **scrypt** (nunca en texto plano), sesión en cookie `HttpOnly` + `SameSite=Strict` firmada con HMAC (12 h), bloqueo de 1 minuto tras 5 intentos fallidos, y las páginas `/admin/` redirigen al login si no hay sesión. Los datos personales (manifiesto, ventas) y las acciones de embarque/anulación solo están disponibles para el administrador: el cliente recibe `401`.
 
 ### Configuración (`.env`, opcional)
 
@@ -39,33 +113,33 @@ Copia `.env.example` a `.env`:
 | Variable | Por defecto | Descripción |
 |---|---|---|
 | `PORT` | `3000` | Puerto HTTP |
-| `DB_PATH` | `./data/boletos.db` | Archivo SQLite |
-| `QR_SECRET` | se genera y guarda en la BD | Secreto para firmar los QR |
+| `HOST` | `0.0.0.0` | `0.0.0.0` acepta clientes de la LAN; `127.0.0.1` solo esta computadora |
+| `DB_PATH` | `./data/boletos.db` | Archivo SQLite (solo existe en el servidor) |
+| `ADMIN_USUARIO` / `ADMIN_PASSWORD` | `admin` / `admin123` | Administrador que se crea en el primer arranque |
+| `QR_SECRET` / `SESION_SECRET` | se generan y guardan en la BD | Secretos de firma de QR y sesiones |
 | `BLOQUEO_MINUTOS` | `5` | Tiempo que un asiento queda reservado mientras el cliente paga |
 | `PRINTER_HOST` / `PRINTER_PORT` | — / `9100` | Impresora térmica de red ESC/POS (opcional) |
 
----
-
-## Arquitectura
+### Estructura del código
 
 ```
 venta-boletos-agencia/
-├── src/
-│   ├── index.js      # Arranque: configuración, BD, semilla, servidor
-│   ├── server.js     # API REST + canal SSE + barrido de reservas vencidas
-│   ├── ventas.js     # ⭐ Lógica de negocio: reservar, comprar, anular, embarcar
-│   ├── db.js         # Esquema SQLite (restricciones e índices) + transacciones
-│   ├── sse.js        # Server-Sent Events: un canal por viaje
-│   ├── qr.js         # Firma y verificación HMAC del contenido del QR
-│   ├── escpos.js     # Ticket ESC/POS 58 mm + envío a impresora de red
-│   ├── seed.js       # Rutas, buses, plano de asientos y programación
-│   └── tiempo.js     # Zona horaria America/Lima
-├── public/           # Frontend sin dependencias de compilación
-│   ├── index.html / venta.js       # Venta con mapa en vivo
-│   ├── embarque.html / embarque.js # Lector QR, manifiesto en vivo, anulación
-│   └── ticket.html / ticket.js     # Boleto 58 mm
-├── test/             # Pruebas de concurrencia, API, SSE, QR y ESC/POS
-└── scripts/simular-concurrencia.js # Demostración en vivo de la carrera
+├── src/                      ← corre SOLO en la Computadora 1
+│   ├── index.js              # Arranque: escucha en la LAN, muestra las IPs, crea el admin
+│   ├── server.js             # API: rutas del cliente (públicas) y del administrador (protegidas) + SSE
+│   ├── ventas.js             # ⭐ Reservar, comprar, anular, embarcar (control de concurrencia)
+│   ├── admin.js              # Panel, salidas, ventas, reportes, CSV
+│   ├── auth.js               # Contraseñas scrypt, sesiones firmadas, límite de intentos
+│   ├── db.js                 # Esquema SQLite (restricciones e índices) + transacciones
+│   ├── sse.js                # Server-Sent Events: un canal por viaje y uno del administrador
+│   ├── qr.js · escpos.js     # QR firmado con HMAC · ticket ESC/POS 58 mm
+│   └── seed.js · tiempo.js   # Datos iniciales · zona horaria de Lima
+├── public/                   ← lo que descargan los navegadores
+│   ├── index.html · venta.js # Página del CLIENTE
+│   ├── ticket.html           # Boleto 58 mm
+│   └── admin/                # Páginas del ADMINISTRADOR (login, panel, embarque)
+├── test/                     # 17 pruebas automatizadas
+└── scripts/simular-concurrencia.js
 ```
 
 ### Ciclo de vida de un asiento
@@ -118,7 +192,7 @@ El embarque usa el mismo patrón (`UPDATE … WHERE estado = 'EMITIDO'`), así q
 ### Pruébalo
 
 ```bash
-npm test                    # 12 pruebas automatizadas
+npm test                    # 17 pruebas automatizadas
 npm start                   # en otra terminal:
 npm run simular -- 200      # 200 clientes por el mismo asiento + doble clic en "Comprar"
 ```
@@ -151,6 +225,8 @@ La prueba más fuerte (`test/concurrencia.test.js`) lanza **16 hilos (`worker_th
 | SSE | El evento llega y nunca expone el `clienteId` real |
 | Embarque | QR adulterado, otra salida y doble embarque simultáneo rechazados |
 | ESC/POS | Inicializa, QR nativo, corte y ≤ 32 columnas por línea |
+| Administrador | Páginas y API protegidas, login, token vencido/alterado, crear salida, cruce de bus, reportes, CSV, cancelación |
+| Panel en vivo | La reserva de un cliente llega al instante al administrador por SSE |
 
 ---
 
@@ -209,17 +285,25 @@ Dos caminos:
 | POST | `/api/viajes/:id/asientos/:asientoId/bloqueo` | Reservar `{clienteId}` → 200 / 409 |
 | DELETE | `/api/viajes/:id/asientos/:asientoId/bloqueo?clienteId=` | Liberar |
 | POST | `/api/viajes/:id/compras` | Comprar `{clienteId, pasajeros:[{asientoId,nombre,documento}]}` → 201 / 409 |
-| GET | `/api/viajes/:id/manifiesto` | Lista de pasajeros |
+| GET | `/api/viajes/:id/manifiesto` | Lista de pasajeros 🔒 |
 | GET | `/api/boletos/:codigo` | Boleto + contenido e imagen del QR |
 | GET | `/api/boletos/:codigo/escpos` | Ticket ESC/POS 58 mm |
-| POST | `/api/boletos/:codigo/imprimir` | Enviar a la térmica de red |
-| POST | `/api/boletos/:codigo/anular` | Anular (libera el asiento) |
-| POST | `/api/embarque` | `{qr, viajeId}` o `{codigo, documento, viajeId}` |
+| POST | `/api/boletos/:codigo/imprimir` | Enviar a la térmica de red 🔒 |
+| POST | `/api/boletos/:codigo/anular` | Anular (libera el asiento) 🔒 |
+| POST | `/api/embarque` | `{qr, viajeId}` o `{codigo, documento, viajeId}` 🔒 |
+| POST | `/api/admin/login` · `/api/admin/logout` | Sesión del administrador |
+| GET | `/api/admin/resumen` · `/salidas` · `/ventas` · `/reportes` · `/reportes.csv` · `/catalogo` | Datos del panel 🔒 |
+| POST | `/api/admin/salidas` · `/api/admin/salidas/:id/cancelar` | Programar / cancelar salidas 🔒 |
+| GET | `/api/admin/eventos` | SSE de actividad en vivo 🔒 |
+
+🔒 = requiere sesión de administrador (si no, `401`).
+
 
 Errores con formato `{ "error": "ASIENTO_NO_DISPONIBLE", "mensaje": "…" }` y códigos HTTP 400/404/409.
 
 ## Limitaciones y siguientes pasos
 
 - El pago está simulado (el botón "Pagar" emite directamente); integrar una pasarela solo cambia el paso entre reserva y compra.
-- El módulo de embarque no tiene autenticación de personal: en producción irían detrás de un login con roles (vendedor / embarque / administrador).
+- Hay un solo rol (administrador); se podrían añadir roles separados (vendedor, embarque) en la tabla `usuarios`.
+- La red local usa HTTP. Para usar la cámara del celular en el embarque o exponer el sistema a Internet, se pondría un proxy con HTTPS (por ejemplo Caddy o nginx).
 - Los eventos SSE se difunden desde el proceso que hizo el cambio; con varias instancias del servidor se añadiría Redis Pub/Sub o `LISTEN/NOTIFY` de PostgreSQL. La garantía de no doble venta **sí** funciona entre procesos porque vive en la base de datos.

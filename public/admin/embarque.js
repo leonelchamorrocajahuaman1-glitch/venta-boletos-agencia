@@ -1,4 +1,4 @@
-import { api, aviso, hora, fechaHora, esc } from './comun.js';
+import { api, aviso, hora, fechaHora, esc } from '../comun.js';
 
 const $ = (s) => document.querySelector(s);
 let viajeId = null;
@@ -12,7 +12,21 @@ async function cargarViajes() {
   const sel = $('#viaje');
   sel.innerHTML = '';
   for (const v of viajes) sel.add(new Option(`${hora(v.salida)} · ${v.origen} → ${v.destino} · ${v.placa} (${fechaHora(v.salida)})`, v.id));
-  if (viajes.length) seleccionar(viajes[0].id);
+  // ?viaje=ID permite llegar directo desde la lista de salidas del panel.
+  const pedido = Number(new URLSearchParams(location.search).get('viaje'));
+  const elegido = viajes.find((v) => v.id === pedido) ?? viajes[0];
+  if (pedido && !viajes.some((v) => v.id === pedido)) {
+    const d = await api('GET', `/api/viajes/${pedido}`).catch(() => null);
+    if (d) {
+      sel.add(new Option(`${hora(d.viaje.salida)} · ${d.viaje.origen} → ${d.viaje.destino} · ${d.viaje.placa} (${fechaHora(d.viaje.salida)})`, pedido), 0);
+      sel.value = pedido;
+      return seleccionar(pedido);
+    }
+  }
+  if (elegido) {
+    sel.value = elegido.id;
+    seleccionar(elegido.id);
+  }
 }
 
 function seleccionar(id) {
@@ -53,7 +67,7 @@ async function cargarManifiesto() {
       <td>${esc(b.documento)}</td>
       <td><span class="estado ${b.estado}">${b.estado === 'EMBARCADO' ? `Embarcado ${hora(b.embarcadoEn)}` : 'Por embarcar'}</span></td>
       <td class="acciones">
-        <a href="ticket.html?codigo=${b.codigo}" target="_blank" rel="noopener">Reimprimir</a>
+        <a href="../ticket.html?codigo=${b.codigo}" target="_blank" rel="noopener">Reimprimir</a>
         ${b.estado === 'EMITIDO' ? `<button class="peligro" data-anular="${b.codigo}">Anular</button>` : ''}
       </td>
     </tr>`).join('') : '<tr><td colspan="5" class="vacio">Aún no hay boletos vendidos para esta salida.</td></tr>';

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso administrador · Las Cobras Viajes</title>
+  <link rel="stylesheet" href="../estilos.css">
+</head>
+<body>
+  <header class="admin"><h1>🐍 Las Cobras Viajes <span class="insignia">Administrador</span></h1></header>
+  <main>
+    <section class="panel login">
+      <h2>Iniciar sesión</h2>
+      <form id="form">
+        <label>Usuario <input name="usuario" required autocomplete="username" value="admin"></label>
+        <label>Contraseña <input name="password" type="password" required autocomplete="current-password" autofocus></label>
+        <p id="error" class="error-texto" role="alert"></p>
+        <button>Entrar</button>
+      </form>
+    </section>
+  </main>
+  <script type="module">
+    import { api } from '../comun.js';
+    const form = document.getElementById('form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      try {
+        await api('POST', '/api/admin/login', { usuario: form.usuario.value, password: form.password.value });
+        const volver = new URLSearchParams(location.search).get('volver');
+        location.href = volver?.startsWith('/admin/') ? volver : '/admin/';
+      } catch (err) {
+        document.getElementById('error').textContent = err.message;
+        form.password.select();
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

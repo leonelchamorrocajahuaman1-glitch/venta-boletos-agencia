@@ -6,17 +6,23 @@ import { crearApp } from '../src/server.js';
 import { contenidoQR } from '../src/qr.js';
 import { ticketEscPos } from '../src/escpos.js';
 import { obtenerBoleto } from '../src/ventas.js';
+import { crearAdminInicial } from '../src/auth.js';
 
 const SECRETO = 'secreto-de-prueba';
-let ctx, servidor, base, detener;
+let ctx, servidor, base, detener, cookie;
 
 before(async () => {
   ctx = bdTemporal();
-  const r = crearApp({ db: ctx.db, secreto: SECRETO, ttlMs: 60_000 });
+  crearAdminInicial(ctx.db, 'admin', 'clave-segura');
+  const r = crearApp({ db: ctx.db, secreto: SECRETO, secretoSesion: 'sesion-prueba', ttlMs: 60_000 });
   detener = r.detener;
   servidor = http.createServer(r.app);
   await new Promise((ok) => servidor.listen(0, ok));
   base = `http://127.0.0.1:${servidor.address().port}`;
+  const login = await fetch(`${base}/api/admin/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario: 'admin', password: 'clave-segura' }),
+  });
+  cookie = login.headers.get('set-cookie').split(';')[0];
 });
 
 after(async () => {
@@ -26,10 +32,10 @@ after(async () => {
   ctx.limpiar();
 });
 
-const api = async (metodo, ruta, cuerpo) => {
+const api = async (metodo, ruta, cuerpo, { comoAdmin = false } = {}) => {
   const res = await fetch(base + ruta, {
     method: metodo,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(comoAdmin ? { Cookie: cookie } : {}) },
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   return { status: res.status, datos: await res.json() };
@@ -77,20 +83,25 @@ test('flujo completo: compra → QR → embarque → reintento rechazado', async
   assert.equal(boleto.datos.qr, contenidoQR(codigo, SECRETO));
   assert.match(boleto.datos.qrImagen, /^data:image\/png;base64,/);
 
-  const falso = await api('POST', '/api/embarque', { qr: `LCV1.${codigo}.00000000000000000000`, viajeId: ctx.viajeId });
+  const sinSesion = await api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId });
+  assert.equal(sinSesion.status, 401, 'un cliente no puede embarcar');
+  const admin = { comoAdmin: true };
+
+  const falso = await api('POST', '/api/embarque', { qr: `LCV1.${codigo}.00000000000000000000`, viajeId: ctx.viajeId }, admin);
   assert.equal(falso.datos.error, 'QR_INVALIDO');
 
-  const otroViaje = await api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId + 1 });
+  const otroViaje = await api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId + 1 }, admin);
   assert.equal(otroViaje.datos.error, 'OTRO_VIAJE');
 
   const [e1, e2] = await Promise.all([
-    api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId }),
-    api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId }),
+    api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId }, admin),
+    api('POST', '/api/embarque', { qr: boleto.datos.qr, viajeId: ctx.viajeId }, admin),
   ]);
   assert.deepEqual([e1.status, e2.status].sort(), [200, 409], 'dos lectores a la vez: solo uno embarca');
   assert.equal([e1, e2].find((e) => e.status === 409).datos.error, 'YA_EMBARCADO');
 
-  const manifiesto = await api('GET', `/api/viajes/${ctx.viajeId}/manifiesto`);
+  assert.equal((await api('GET', `/api/viajes/${ctx.viajeId}/manifiesto`)).status, 401, 'datos personales protegidos');
+  const manifiesto = await api('GET', `/api/viajes/${ctx.viajeId}/manifiesto`, null, admin);
   assert.equal(manifiesto.datos.find((b) => b.codigo === codigo).estado, 'EMBARCADO');
 });
 

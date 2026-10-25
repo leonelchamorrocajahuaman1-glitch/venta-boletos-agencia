@@ -2,7 +2,7 @@
 // se difunde al instante a todos los navegadores que miran ese viaje.
 export class CanalSSE {
   constructor({ latidoMs = 20_000 } = {}) {
-    this.suscriptores = new Map(); // viajeId -> Set<res>
+    this.suscriptores = new Map(); // viajeId (o 'admin') -> Set<res>
     this.latido = setInterval(() => this.#escribirATodos(': ping\n\n'), latidoMs);
     this.latido.unref();
   }
@@ -27,7 +27,7 @@ export class CanalSSE {
   }
 
   emitir(viajeId, evento, datos) {
-    const grupo = this.suscriptores.get(Number(viajeId));
+    const grupo = this.suscriptores.get(viajeId);
     if (!grupo) return;
     const mensaje = `event: ${evento}\ndata: ${JSON.stringify(datos)}\n\n`;
     for (const res of grupo) res.write(mensaje);

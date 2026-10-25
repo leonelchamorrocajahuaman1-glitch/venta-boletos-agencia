@@ -8,12 +8,11 @@ const RUTAS = [
   { origen: 'Arequipa', destino: 'Puno', duracion: 330, precio: 4000 },
 ];
 
-const BUSES = [
-  { placa: 'LCV-101', modelo: 'Scania K410 · 2 pisos' },
-  { placa: 'LCV-102', modelo: 'Scania K410 · 2 pisos' },
-  { placa: 'LCV-201', modelo: 'Marcopolo G8 · 2 pisos' },
-  { placa: 'LCV-202', modelo: 'Marcopolo G8 · 2 pisos' },
-];
+// Un bus por cada combinación ruta/horario: así ningún bus tiene dos salidas que se crucen.
+const BUSES = Array.from({ length: 12 }, (_, i) => ({
+  placa: `LCV-${101 + i}`,
+  modelo: i % 2 ? 'Marcopolo G8 · 2 pisos' : 'Scania K410 · 2 pisos',
+}));
 
 const HORARIOS = ['08:00', '14:30', '21:00'];
 
@@ -62,7 +61,7 @@ export function asegurarProgramacion(db, ahora = Date.now(), dias = 4) {
       const fecha = sumarDias(hoy, d);
       rutas.forEach((r, i) => {
         HORARIOS.forEach((hora, j) => {
-          const busId = buses[(i + j) % buses.length].id;
+          const busId = buses[(i * HORARIOS.length + j) % buses.length].id;
           const res = viaje.run(r.id, busId, horaLocal(fecha, hora), r.precio_base);
           if (res.changes === 1) asientos.run(Number(res.lastInsertRowid), busId);
         });
