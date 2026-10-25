@@ -83,6 +83,24 @@ Conéctala a la **misma red** (mismo Wi-Fi o switch) y abre en cualquier navegad
 
 Abre `http://localhost:3000/admin/` en una ventana y `http://localhost:3000/` en otra (o en una ventana de incógnito). Compra un pasaje en la del cliente: en el panel del administrador aparece al instante en **Actividad en vivo** y se actualizan los indicadores.
 
+### ¿No carga en el celular? (solución de problemas)
+
+Haz las comprobaciones en este orden:
+
+1. **No uses `localhost` en el celular.** `localhost` siempre significa "este mismo aparato", así que en el celular busca un servidor dentro del propio celular. Usa la IP del servidor, por ejemplo `http://192.168.1.15:3000/`. Lo más fácil es **escanear el QR** que aparece en el Panel del administrador.
+2. **Mismo Wi-Fi.** El celular debe estar en la misma red que la computadora servidor, con los **datos móviles desactivados**. Las redes Wi-Fi de invitados o de universidades suelen aislar los dispositivos entre sí ("aislamiento de clientes"). En ese caso, usa el **punto de acceso (hotspot) del celular** y conecta la computadora a él.
+3. **Elige la IP correcta.** Si la consola muestra varias direcciones, usa la del adaptador **Wi-Fi** o **Ethernet**, normalmente `192.168.x.x`. Las marcadas como "adaptador virtual" (VirtualBox, WSL, Hyper-V) no sirven.
+4. **Prueba de conexión.** Abre en el celular `http://IP:3000/api/ping`:
+   - Si muestra `{"ok":true,...}`, la red funciona y el problema está en la página: actualiza el navegador del celular.
+   - Si se queda cargando y no abre, casi siempre es el **Firewall de Windows**. Ejecuta en PowerShell **como administrador**:
+     ```powershell
+     New-NetFirewallRule -DisplayName "Las Cobras Viajes" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any
+     ```
+     También revisa que la red de Windows esté como **Privada** (Configuración → Red e Internet → propiedades del Wi-Fi) y que ningún antivirus bloquee Node.js.
+5. **El servidor sigue encendido.** La ventana con `npm start` debe seguir abierta; si la cierras, el sistema se apaga.
+
+Si la página abre pero no llega al servidor, ahora muestra un aviso **"No se pudo conectar con el servidor"** con estos mismos pasos, en lugar de quedarse en blanco.
+
 ---
 
 ## Página del cliente (`/`)

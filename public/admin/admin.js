@@ -220,11 +220,20 @@ $('#salir').addEventListener('click', async () => {
 
 const sesion = await api('GET', '/api/admin/sesion');
 $('#usuario').textContent = `👤 ${sesion.nombre}`;
-$('#urls').innerHTML = sesion.urlsClientes.length
-  ? `<p>En las computadoras de los clientes (misma red Wi-Fi o cable), abre en el navegador:</p>
-     <p>${sesion.urlsClientes.map((u) => `<code>${esc(u)}/</code>`).join(' &nbsp;o&nbsp; ')}</p>
-     <p class="vacio">La base de datos vive solo en esta computadora (servidor); los clientes no la necesitan.</p>`
-  : '<p>No se detectó una red local. Conecta esta computadora a la red para que los clientes puedan entrar.</p>';
+const reales = sesion.urlsClientes.filter((r) => !r.virtual);
+const principal = reales[0] ?? sesion.urlsClientes[0];
+$('#urls').innerHTML = principal
+  ? `<div class="qr-cliente">
+       <img src="${principal.qr}" alt="QR con la dirección para clientes">
+       <div>
+         <p>En el <b>celular o la computadora del cliente</b>, conectados al <b>mismo Wi-Fi</b>, escanea el QR o abre:</p>
+         <p><code>${esc(principal.url)}/</code> <small class="vacio">(${esc(principal.interfaz)})</small></p>
+         ${sesion.urlsClientes.length > 1 ? `<p class="vacio">Otras direcciones de este equipo: ${sesion.urlsClientes.filter((r) => r !== principal)
+           .map((r) => `${esc(r.url)}/ (${esc(r.interfaz)}${r.virtual ? ', virtual' : ''})`).join(' · ')}</p>` : ''}
+         <p class="vacio">¿No abre? Prueba <code>${esc(principal.url)}/api/ping</code> en el celular: si tampoco carga, revisa el Firewall (puerto ${esc(new URL(principal.url).port)}) y que el celular no use datos móviles.</p>
+       </div>
+     </div>`
+  : '<p>No se detectó una red local. Conecta esta computadora al Wi-Fi para que los clientes puedan entrar.</p>';
 await cargarCatalogo();
 conectarActividad();
 mostrarVista();

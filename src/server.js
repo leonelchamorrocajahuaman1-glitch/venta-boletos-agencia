@@ -40,6 +40,9 @@ export function crearApp({
   const emitirAsiento = (viajeId, asiento) => asiento && sse.emitir(viajeId, 'asiento', asiento);
   const actividad = (tipo, texto, datos = {}) => sse.emitir('admin', 'actividad', { tipo, texto, t: Date.now(), ...datos });
 
+  // Prueba de conexión: abrir /api/ping desde el celular confirma que la red y el firewall están bien.
+  app.get('/api/ping', (req, res) => res.json({ ok: true, sistema: 'Las Cobras Viajes', tuIp: req.socket.remoteAddress }));
+
   // ─────────────── Cliente (Computadora 2): consulta y compra ───────────────
   app.get('/api/ciudades', (req, res) => res.json(ventas.listarCiudades(db)));
 
@@ -127,9 +130,12 @@ export function crearApp({
   // ─────────────── Administrador: todo lo demás requiere sesión ───────────────
   app.use('/api/admin', soloAdmin);
 
-  app.get('/api/admin/sesion', (req, res) => {
+  app.get('/api/admin/sesion', async (req, res) => {
     const u = db.prepare('SELECT usuario, nombre FROM usuarios WHERE usuario = ?').get(req.admin);
-    res.json({ ...u, urlsClientes: urlsRed() });
+    const urlsClientes = await Promise.all(urlsRed().map(async (r) => ({
+      ...r, qr: await QRCode.toDataURL(`${r.url}/`, { margin: 1, width: 280 }),
+    })));
+    res.json({ ...u, urlsClientes });
   });
   app.get('/api/admin/eventos', (req, res) => sse.suscribir('admin', req, res));
   app.get('/api/admin/resumen', (req, res) => res.json(admin.resumen(db)));

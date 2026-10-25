@@ -43,11 +43,16 @@ const impresora = process.env.PRINTER_HOST
   ? { host: process.env.PRINTER_HOST, port: Number(process.env.PRINTER_PORT || 9100) }
   : null;
 
-// Direcciones IPv4 de esta computadora en la red local: son las que deben abrir las computadoras cliente.
+// Direcciones IPv4 de esta computadora en la red local: son las que deben abrir los clientes.
+// Los adaptadores virtuales (VirtualBox, WSL, Hyper-V, Docker, VPN) no sirven para el celular:
+// se marcan y se listan al final para no confundirlos con el Wi-Fi o el cable real.
+const VIRTUAL = /vethernet|virtualbox|vbox|vmware|wsl|hyper-v|docker|br-|veth|tailscale|zerotier|hamachi|vpn|tun|tap/i;
 function urlsRed() {
-  return Object.values(os.networkInterfaces()).flat()
-    .filter((i) => i && i.family === 'IPv4' && !i.internal)
-    .map((i) => `http://${i.address}:${PORT}`);
+  return Object.entries(os.networkInterfaces())
+    .flatMap(([interfaz, ips]) => (ips ?? []).map((i) => ({ ...i, interfaz })))
+    .filter((i) => i.family === 'IPv4' && !i.internal)
+    .map((i) => ({ url: `http://${i.address}:${PORT}`, interfaz: i.interfaz, virtual: VIRTUAL.test(i.interfaz) }))
+    .sort((a, b) => a.virtual - b.virtual);
 }
 
 const { app } = crearApp({ db, secreto, secretoSesion, ttlMs: TTL_MS, impresora, urlsRed });
@@ -56,7 +61,10 @@ app.listen(PORT, HOST, () => {
   console.log('   ADMINISTRADOR (en esta computadora):');
   console.log(`     http://localhost:${PORT}/admin/\n`);
   console.log('   CLIENTES (desde otras computadoras de la red local):');
-  for (const url of urlsRed()) console.log(`     ${url}/`);
+  for (const r of urlsRed()) {
+    console.log(`     ${`${r.url}/`.padEnd(28)} (${r.interfaz})${r.virtual ? '  ← adaptador virtual, probablemente NO es tu Wi-Fi' : ''}`);
+  }
   if (!urlsRed().length) console.log('     (sin red local detectada)');
-  console.log('');
+  console.log('\n   ¿El celular no abre la página? Debe estar en el mismo Wi-Fi y el Firewall debe permitir el puerto');
+  console.log(`   ${PORT}. Desde el celular, prueba primero: <dirección>/api/ping\n`);
 });

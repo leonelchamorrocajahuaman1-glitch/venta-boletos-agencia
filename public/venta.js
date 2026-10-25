@@ -1,4 +1,4 @@
-import { api, aviso, soles, hora, fechaHora, hoyLima, duracion, idAleatorio, esc } from './comun.js';
+import { api, aviso, soles, hora, fechaHora, hoyLima, duracion, idAleatorio, esc, mostrarErrorConexion } from './comun.js';
 
 const clienteId = (() => {
   try {
@@ -135,7 +135,12 @@ function pintarAsiento(btn, a) {
 function dibujarMapa() {
   const cont = $('#pisos');
   cont.innerHTML = '';
-  const pisos = Map.groupBy([...estado.asientos.values()], (a) => a.piso);
+  // Agrupación manual por piso (Map.groupBy no existe en celulares con navegadores anteriores a 2024).
+  const pisos = new Map();
+  for (const a of estado.asientos.values()) {
+    if (!pisos.has(a.piso)) pisos.set(a.piso, []);
+    pisos.get(a.piso).push(a);
+  }
   for (const [piso, asientos] of [...pisos].sort((x, y) => x[0] - y[0])) {
     const columnas = Math.max(...asientos.map((a) => a.columna));
     const div = document.createElement('div');
@@ -270,5 +275,11 @@ $('#form-mi-boleto').addEventListener('submit', (e) => {
   window.open(`ticket.html?codigo=${encodeURIComponent(codigo)}`, '_blank', 'noopener');
   e.target.reset();
 });
-await cargarCiudades();
-await buscar();
+try {
+  await cargarCiudades();
+  await buscar();
+  window.__ventaLista = true;
+} catch (err) {
+  window.__ventaLista = true;
+  mostrarErrorConexion(err);
+}

@@ -65,6 +65,19 @@
     </form>
   </dialog>
 
+  <noscript><p style="padding:16px">Activa JavaScript para usar el sistema de venta.</p></noscript>
+  <script>
+    // Aviso para navegadores muy antiguos que no cargan módulos de JavaScript.
+    setTimeout(function () {
+      if (!window.__ventaLista) {
+        var m = document.querySelector('main');
+        if (m && !document.querySelector('.viaje, .error-conexion')) {
+          m.insertAdjacentHTML('afterbegin', '<section class="panel error-conexion"><h2>Cargando…</h2>' +
+            '<p>Si esta página no muestra salidas, actualiza el navegador (Chrome, Safari o Firefox recientes) o revisa la conexión con el servidor.</p></section>');
+        }
+      }
+    }, 6000);
+  </script>
   <script type="module" src="venta.js"></script>
 </body>
 </html>

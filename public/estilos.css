@@ -184,3 +184,7 @@ header .usuario button { padding: 4px 10px; font-size: .8rem; background: transp
 .login form { display: grid; gap: 12px; }
 .error-texto { color: var(--error); min-height: 1.2em; margin: 0; font-size: .9rem; }
 .leyenda .l-marca::before { background: var(--marca); }
+.error-conexion { border-left: 4px solid var(--error); margin-bottom: 16px; }
+.error-conexion ul { padding-left: 20px; }
+.qr-cliente { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.qr-cliente img { width: 140px; height: 140px; image-rendering: pixelated; border: 1px solid var(--borde); border-radius: 8px; }

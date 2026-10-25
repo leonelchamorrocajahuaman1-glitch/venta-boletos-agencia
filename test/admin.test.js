@@ -11,7 +11,7 @@ let ctx, servidor, base, detener, cookie;
 before(async () => {
   ctx = bdTemporal();
   crearAdminInicial(ctx.db, 'admin', 'clave-segura');
-  const r = crearApp({ db: ctx.db, secreto: 'qr', secretoSesion: 'sesion', ttlMs: 60_000, urlsRed: () => ['http://192.168.1.10:3000'] });
+  const r = crearApp({ db: ctx.db, secreto: 'qr', secretoSesion: 'sesion', ttlMs: 60_000, urlsRed: () => [{ url: 'http://192.168.1.10:3000', interfaz: 'Wi-Fi', virtual: false }] });
   detener = r.detener;
   servidor = http.createServer(r.app);
   await new Promise((ok) => servidor.listen(0, ok));
@@ -56,7 +56,9 @@ test('login: contraseña incorrecta, bloqueo por intentos y sesión válida', as
   cookie = setCookie.split(';')[0];
   const sesion = await api('GET', '/api/admin/sesion');
   assert.equal(sesion.datos.usuario, 'admin');
-  assert.deepEqual(sesion.datos.urlsClientes, ['http://192.168.1.10:3000']);
+  assert.equal(sesion.datos.urlsClientes[0].url, 'http://192.168.1.10:3000');
+  assert.match(sesion.datos.urlsClientes[0].qr, /^data:image\/png;base64,/, 'QR para abrir la página desde el celular');
+  assert.equal((await api('GET', '/api/ping')).datos.ok, true);
   assert.equal((await api('GET', '/admin/')).status, 200);
 });
 
